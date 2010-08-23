@@ -1,3 +1,4 @@
+import os, pickle
 import numpy as np
 
 from pytcod import Color
@@ -66,6 +67,11 @@ class EditorScene(Scene):
         self.delmark = None
         self.markmat = entities.get('mark')
 
+    def reset_editor(self):
+        self.mode = 't'
+        self.mark = None
+        self.delmark = None
+
     def next_brush(self):
         self.palette.append(self.palette.pop(0))
 
@@ -77,10 +83,19 @@ class EditorScene(Scene):
     brush = property(_getbrush)
 
     def save(self, filename):
-        pass
+        print os.getcwd()
+        fobj = open(os.path.join("./levels", filename), 'w')
+        pickle.dump(self.level, fobj)
+        print "Level '{0}' saved".format(filename)
 
     def load(self, filename):
-        pass
+        try:
+            fobj = open(os.path.join("./levels", filename), 'r')
+            self.level = pickle.load(fobj)
+            self.reset_editor()
+            print "Level '{0}' loaded".format(filename)
+        except:
+            print "Unable to load '{0}'".format(filename)
 
     def update(self):
 	action = self.app.input.check_for_action('editor')
@@ -99,6 +114,12 @@ class EditorScene(Scene):
             elif action == 'prev_brush':
                 self.prev_brush()
                 print "CURRENT BRUSH:", self.brush.name
+            elif action == 'save':
+                s = raw_input("Level name:")
+                self.save(s)
+            elif action == 'load':
+                s = raw_input("Level name:")
+                self.load(s)
 
 	mouse = self.app.window.mouseinfo
         if mouse.mpressed:

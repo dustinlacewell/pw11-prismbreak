@@ -52,17 +52,17 @@ class EditorScene(Scene):
         self.delmark = None
         self.markmat = entities.get('mark')
 
-    def build(self, x, y, etype):
+    def build(self, x, y, etype, *args, **kwargs):
         ct = self.level.tile_at(x, y)
         if ct:
             self.destroy(ct)
-        self.level.tiles.append(etype(x, y))
+        self.level.tiles.append(etype(x, y, *args, **kwargs))
 
-    def place(self, x, y, etype):
+    def place(self, x, y, etype, *args, **kwargs):
         ce = self.level.ent_at(x, y)
         if ce:
             self.remove(ce)
-        self.level.entities.append(etype(x, y))
+        self.level.entities.append(etype(x, y, *args, **kwargs))
 
     def destroy(self, entity):
         if entity in self.level.tiles:
@@ -144,9 +144,13 @@ class EditorScene(Scene):
                 else:
                     yiter = xrange(h, 1, 1)
                 method = self.build if self.mode == 't' else self.place
+                args = []
+                if self.brush.name in ['upexit', 'downexit']:
+                    linkname = raw_input("Level name to link.")
+                    args.append(linkname)
                 for ix in xiter:
                     for iy in yiter:
-                        method(self.mark[0] + ix, self.mark[1] + iy, self.brush)
+                        method(self.mark[0] + ix, self.mark[1] + iy, self.brush, *args)
                 self.dirty = True
                 self.mark = None
         if mouse.rpressed:

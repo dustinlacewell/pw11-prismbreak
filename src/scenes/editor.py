@@ -186,7 +186,8 @@ class EditorScene(Scene):
         for tile in  self.level.tiles:
             self.view.put_char(tile.x, tile.y, ord(tile.icon), tile.fg, tile.bg)
         for ent in  self.level.entities:
-            self.view.put_char(ent.x, ent.y, ord(ent.icon), ent.fg, ent.bg)
+            self.view.set_char(ent.x, ent.y, ord(ent.icon))
+            self.view.set_fore(ent.x, ent.y, ent.fg)
         if self.mark:
             mx, my = self.mark
             self.view.put_char(mx, my, ord(self.markmat.icon), self.markmat.fg, self.markmat.bg)

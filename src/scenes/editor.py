@@ -88,13 +88,17 @@ class EditorScene(Scene):
 	    if action == 'quit':
 		self.app.running = False
             elif action == 'tile_mode':
+                print "TILE MODE"
                 self.mode = 't'
             elif action == 'ent_mode':
+                print "ENTITY MODE"
                 self.mode = 'e'
             elif action == 'next_brush':
                 self.next_brush()
+                print "CURRENT BRUSH:", self.brush.name
             elif action == 'prev_brush':
                 self.prev_brush()
+                print "CURRENT BRUSH:", self.brush.name
 
 	mouse = self.app.window.mouseinfo
         if mouse.mpressed:
@@ -115,7 +119,6 @@ class EditorScene(Scene):
                 method = self.level.build if self.mode == 't' else self.level.place
                 for ix in xiter:
                     for iy in yiter:
-                        print "Placing", ix, iy, self.mark[0] + ix, self.mark[1] + iy
                         method(self.mark[0] + ix, self.mark[1] + iy, self.brush)
                 self.dirty = True
                 self.mark = None

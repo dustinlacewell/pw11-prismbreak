@@ -11,27 +11,12 @@ from src.imports import get_all
 class Level(object):
 
     def __init__(self, app):
-        self.app = app
         self.w = app.view.width
         self.h = app.view.height
 
         self.tiles = []
         self.entities = []
 
-    def build(self, x, y, etype):
-        self.tiles.append(etype(x, y, self.app, self))
-
-    def place(self, x, y, etype):
-        self.entities.append(etype(x, y, self.app, self))
-
-    def destroy(self, entity):
-        if entity in self.tiles:
-            self.tiles.remove(entity)
-
-    def remove(self, entity):
-        if entity in self.entities:
-            self.entities.remove(entity)
-        
     def tile_at(self, x, y):
         print 'tileat', x, y
         for t in self.tiles:
@@ -67,6 +52,26 @@ class EditorScene(Scene):
         self.delmark = None
         self.markmat = entities.get('mark')
 
+    def build(self, x, y, etype):
+        ct = self.level.tile_at(x, y)
+        if ct:
+            self.destroy(ct)
+        self.level.tiles.append(etype(x, y))
+
+    def place(self, x, y, etype):
+        ce = self.level.ent_at(x, y)
+        if ce:
+            self.remove(ce)
+        self.level.entities.append(etype(x, y))
+
+    def destroy(self, entity):
+        if entity in self.level.tiles:
+            self.level.tiles.remove(entity)
+
+    def remove(self, entity):
+        if entity in self.level.entities:
+            self.level.entities.remove(entity)
+        
     def reset_editor(self):
         self.mode = 't'
         self.mark = None
@@ -84,15 +89,16 @@ class EditorScene(Scene):
 
     def save(self, filename):
         print os.getcwd()
-        fobj = open(os.path.join("./levels", filename), 'w')
+        fobj = open(os.path.join("data/levels", filename + '.lvl'), 'w')
         pickle.dump(self.level, fobj)
         print "Level '{0}' saved".format(filename)
 
     def load(self, filename):
         try:
-            fobj = open(os.path.join("./levels", filename), 'r')
+            fobj = open(os.path.join("data/levels", filename + '.lvl'), 'r')
             self.level = pickle.load(fobj)
             self.reset_editor()
+            self.dirty = True
             print "Level '{0}' loaded".format(filename)
         except:
             print "Unable to load '{0}'".format(filename)
@@ -137,7 +143,7 @@ class EditorScene(Scene):
                     yiter = xrange(h + 1)
                 else:
                     yiter = xrange(h, 1, 1)
-                method = self.level.build if self.mode == 't' else self.level.place
+                method = self.build if self.mode == 't' else self.place
                 for ix in xiter:
                     for iy in yiter:
                         method(self.mark[0] + ix, self.mark[1] + iy, self.brush)
@@ -158,7 +164,7 @@ class EditorScene(Scene):
                     yiter = xrange(h + 1)
                 else:
                     yiter = xrange(h, 1, 1)
-                method = self.level.destroy if self.mode == 't' else self.level.remove
+                method = self.destroy if self.mode == 't' else self.remove
                 method2 = self.level.tile_at if self.mode == 't' else self.level.ent_at
                 for ix in xiter:
                     for iy in yiter:

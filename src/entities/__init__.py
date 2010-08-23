@@ -14,10 +14,10 @@ class Entity(object):
     block = False
 
     
-    def __init__(self, x, y, app, level):
-        self.app = app
-        self.level = app
-        print "My coord", x, y
+    def __init__(self, x, y):
         self.x = x
         self.y = y
+
+    def inititalize(self, app):
+        self.app = app
 

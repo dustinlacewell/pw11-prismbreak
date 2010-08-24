@@ -57,7 +57,7 @@ class InputMapper(object):
         self.section = self.parser.sections()[0]
     
     def check_for_action(self, section):
-        key = self.app.window.check_for_key(pytcod.PRESSED)
+        key = self.app.window.wait_for_key(flush=True)
         self.lastkey = key
         if key.vkey != pytcod.K_CHAR:
             key_name = self.keylist[key.vkey]

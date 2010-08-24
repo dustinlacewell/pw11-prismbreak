@@ -10,6 +10,7 @@ class RobotGuard(Entity):
     fg = Color(0, 0, 255)
     bg = Color(31, 33, 37)
     block = True
+    path = None
 
     def do_move(self, game, dx, dy):
         if self.coord_in_bounds(game, dx, dy):
@@ -31,17 +32,30 @@ class RobotGuard(Entity):
     def update(self, game):
         level = game.level
         player = game.player
-        actions = []
-        if player.x > self.x:
-            actions.append(self.move_right)
-        elif player.x < self.x:
-            actions.append(self.move_left)
-        if player.y > self.y:
-            actions.append(self.move_down)
-        elif player.y < self.y:
-            actions.append(self.move_up)
-        action = random.choice(actions)
-        action(game)
+        map = game.map
+        map.compute_fov(self.x, self.y, radius=10, walls=False)
+        playercell = map.cell(player.x, player.y)
+        if playercell.lit:
+            print "PLAYER SEEN"
+            if not self.path or self.path.destination != (player.x, player.y):
+                path = map.get_path()
+                print "PATH MADE"
+                if path.compute(self.x, self.y, player.x, player.y):
+                    self.path = path
+                    print "PATH COMPUTED"
+        if self.path:
+            dx, dy = self.path.walk()
+            actions = []
+            if dx > self.x:
+                actions.append(self.move_right)
+            elif dx < self.x:
+                actions.append(self.move_left)
+            if dy > self.y:
+                actions.append(self.move_down)
+            elif dy < self.y:
+                actions.append(self.move_up)
+            for action in actions:
+                action(game)
         
 
 exported_class = RobotGuard

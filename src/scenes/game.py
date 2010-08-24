@@ -26,6 +26,7 @@ class GameplayScene(Scene):
 	self.view = app.view
         
         self.ground = entities.get('ground')
+        self.map = None
         self.levelname = 'start'
         sx, sy = self.load(self.first_level)
         
@@ -45,11 +46,22 @@ class GameplayScene(Scene):
                 print self.level.links, self.levelname, filename
                 sx, sy = self.level.links[self.levelname]
                 self.levelname = filename
+                self.map = Map(self.app.view.width, self.app.view.height)
+                self.map.clear(transparent=True, walkable=True)
+                self.map.radius = 12
+                self.map.lightwalls = True
+                for tile in self.level.tiles:
+                    if tile.block:
+                        cell = self.map.cell(tile.x, tile.y)
+                        cell.walkable = False
+                        cell.transparent = False
+                self.map.compute_fov(sx, sy)
                 return sx, sy
-
+        except Exception, e:
+            print e, e.message
             
-        except:
-            print "Unable to load '{0}'".format(filename)
+#        except:
+#            print "Unable to load '{0}'".format(filename)
 
     def update(self):
 	action = self.app.input.check_for_action('game')
@@ -71,7 +83,7 @@ class GameplayScene(Scene):
                         for entity in self.level.entities:
                             entity.update(self)
 
-
+            self.map.compute_fov(self.player.x, self.player.y)
 	mouse = self.app.window.mouseinfo
 
     def draw(self, view, force=False):
@@ -85,14 +97,20 @@ class GameplayScene(Scene):
             for x in xrange(view.width):
                 for y in xrange(view.height):
                     bg = random.choice(self.prism)
+                    if self.map.cell(x, y).lit:
+                        bg = bg.lerped(YELLOW, .04)
                     view.put_char(x, y, ord(self.ground.icon), self.ground.fg, bg)
                     
             for tile in  self.level.tiles:
                 bg = tile.bg.lerped(random.choice(self.prism), min(.2, random.random()))
-                self.view.put_char(tile.x, tile.y, ord(tile.icon), tile.fg, bg)
+                cell = self.map.cell(tile.x, tile.y)
+                if cell.lit or tile.name=='stone':
+                    self.view.put_char(tile.x, tile.y, ord(tile.icon), tile.fg, bg)
             for ent in  self.level.entities:
-                self.view.set_char(ent.x, ent.y, ord(ent.icon))
-                self.view.set_fore(ent.x, ent.y, ent.fg)
+                cell = self.map.cell(ent.x, ent.y)
+                if cell.lit:
+                    self.view.set_char(ent.x, ent.y, ord(ent.icon))
+                    self.view.set_fore(ent.x, ent.y, ent.fg)
             p = self.player
             self.view.set_char(p.x, p.y, ord(p.icon))
             self.view.set_fore(p.x, p.y, p.fg)

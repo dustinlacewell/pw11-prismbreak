@@ -1,36 +1,12 @@
 import os, pickle
-import numpy as np
 
 from pytcod import Color
 
 from src import entities
+from src.level import Level
 from src.scenes import Scene
 from src.utils import dlog, dtrace
 from src.imports import get_all
-
-class Level(object):
-
-    def __init__(self, app):
-        self.w = app.view.width
-        self.h = app.view.height
-
-        self.tiles = []
-        self.entities = []
-
-    def tile_at(self, x, y):
-        print 'tileat', x, y
-        for t in self.tiles:
-            if t.x == x and t.y == y:
-                return t
-
-    def ent_at(self, x, y):
-        for e in self.entities:
-            if e.x == x and e.y == y:
-                return e
-
-    def draw(self):
-        pass
-
 
 class EditorScene(Scene):
     def __init__(self):
@@ -51,6 +27,8 @@ class EditorScene(Scene):
         self.mark = None
         self.delmark = None
         self.markmat = entities.get('mark')
+        self.ground = entities.get('ground')
+        print "CURRENT BRUSH:", self.brush
 
     def build(self, x, y, etype, *args, **kwargs):
         ct = self.level.tile_at(x, y)
@@ -172,7 +150,6 @@ class EditorScene(Scene):
                 method2 = self.level.tile_at if self.mode == 't' else self.level.ent_at
                 for ix in xiter:
                     for iy in yiter:
-                        print "Destroying", ix, iy, self.delmark[0] + ix, self.delmark[1] + iy
                         ent = method2(self.delmark[0] + ix, self.delmark[1] + iy)
                         method(ent)
                 self.dirty = True
@@ -185,7 +162,7 @@ class EditorScene(Scene):
         
         # Clear to bg color
         self.view.bg = Color(42, 42, 48)
-        self.view.clear()
+        self.view.clear_ex(0,0,self.view.width, self.view.height, ord(self.ground.icon), self.ground.fg, self.ground.bg)
 
         for tile in  self.level.tiles:
             self.view.put_char(tile.x, tile.y, ord(tile.icon), tile.fg, tile.bg)

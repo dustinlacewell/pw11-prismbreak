@@ -8,7 +8,7 @@ from src.utils import dlog
 
 class SplashScene(scenes.Scene):
     def __init__(self):
-	self.image = Image.load("data/images/splash2.png")
+	self.image = Image.load("data/images/splash.png")
 
     def enter(self, app):
 	self.app = app

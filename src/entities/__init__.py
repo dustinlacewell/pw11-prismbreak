@@ -18,6 +18,5 @@ class Entity(object):
         self.x = x
         self.y = y
 
-    def inititalize(self, app):
-        self.app = app
-
+    def update(self, app, level, player):
+        pass

@@ -1,4 +1,4 @@
-import numpy as np
+from pytcod import *
 
 from src import scenes
 

@@ -20,7 +20,7 @@ class SplashScene(scenes.Scene):
 	    if action == 'quit':
 		self.app.running = False
 	if self.app.input.lastkey.vkey != K_NONE and action !='quit' :
-	    scene = scenes.get('editor')()
+	    scene = scenes.get('game')()
 	    self.app.scene = scene
 
     def draw(self, view, force=False):

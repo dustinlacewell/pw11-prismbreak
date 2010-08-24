@@ -1,6 +1,6 @@
 import os, pickle
 
-from pytcod import Color
+from pytcod import *
 
 from src import entities
 from src.level import Level
@@ -106,7 +106,15 @@ class EditorScene(Scene):
                 self.load(s)
 
 	mouse = self.app.window.mouseinfo
-        if mouse.mpressed:
+        if mouse.lpressed:
+            pressed = self.app.window.is_key_pressed
+            if pressed(K_CONTROL):
+                mx = mouse.cx
+                my = mouse.cy
+                link_dest = raw_input("Link level name: ")
+                self.level.links[link_dest] = (mx, my)
+                print "LEVEL LINK SET:", link_dest, mx, my
+        elif mouse.mpressed:
             if not self.mark:
                 self.mark = (mouse.cx, mouse.cy)
                 self.dirty = True
@@ -124,7 +132,7 @@ class EditorScene(Scene):
                 method = self.build if self.mode == 't' else self.place
                 args = []
                 if self.brush.name in ['upexit', 'downexit']:
-                    linkname = raw_input("Level name to link.")
+                    linkname = raw_input("Level name to link: ")
                     args.append(linkname)
                 for ix in xiter:
                     for iy in yiter:
@@ -175,5 +183,8 @@ class EditorScene(Scene):
         if self.delmark:
             mx, my = self.delmark
             self.view.put_char(mx, my, ord(self.markmat.icon), self.markmat.bg, self.markmat.fg)
+        for link in self.level.links.itervalues():
+            mx, my = link
+            self.view.put_char(mx, my, ord('L'), BLACK, YELLOW)
 
 exported_class = EditorScene

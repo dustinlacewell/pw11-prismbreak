@@ -71,3 +71,5 @@ class Application(object):
             self.window.flush()
 
             self.scene.update()
+
+        self.window = None

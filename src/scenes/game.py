@@ -23,13 +23,17 @@ def random_deathmsg():
     return random.choice(death_messages)
 
 class MessageFrame(object):
-    def __init__(self, x, y, width, height, message, title):        
+    def __init__(self, x, y, width, height, message, title,wrapped=True):        
         self.x = x - (width/2)
         self.y = y - (height/2)
         self.width = width
         self.height = height
         self.title = title
-        self.message = wrap(message, width - 2)
+        if wrapped:
+            self.message = wrap(message, width - 2, drop_whitespace = False)
+        else:
+            self.message = message
+        print self.message
         self.nblines = len(self.message)
         self.line = 0
         if self.nblines <= height - 2:
@@ -73,6 +77,7 @@ class GameplayScene(Scene):
     def __init__(self):
 	self.dirty = True
         self.init_prism_palettes()
+        self.seenmsgs = set()
 
     def init_prism_palettes(self):
         self.darkprism = []
@@ -127,7 +132,7 @@ class GameplayScene(Scene):
                 self.map.lightwalls = True
                 for tile in self.level.tiles:
                     cell = self.map.cell(tile.x, tile.y)
-                    cell.walkable = tile.block
+                    cell.walkable = not tile.block
                     cell.transparent = tile.transparent
                 self.map.compute_fov(sx, sy)
                 return sx, sy
@@ -147,12 +152,25 @@ class GameplayScene(Scene):
     def player_death(self, ent):
         self.playerdead = True
         msg = random_deathmsg()
-        self.set_frame(self.view.width / 2, 30, 
-                       25, 5, 
-                       msg, "Wiz says:")
+        self.set_frame(25, 5, msg, "Wiz says:")
 
-    def set_frame(self, x, y, width, height, message, title):
-        self.frame = MessageFrame(x, y, width, height, message, title)        
+    def set_frame(self, width, height, message, title, wrapped=True):
+        x = self.view.width / 2
+        y = self.view.height / 2
+        self.frame = MessageFrame(x, y, width, height, message, title, wrapped)        
+
+    def show_help(self):
+        help = [
+            "How to play:",
+            " 1. Escape Prismguard.",
+            " 2. Avoid the robots.",
+            " 3. If two robots collide, they will drop",
+            "    some scrap. You might need it later on.",
+            " ",
+            "Move:        Arrow Keys",
+        ]
+
+        self.set_frame(32, 9, help, "Prism Break Help", False)
 
     def update(self):
 	action = self.app.input.check_for_action('game')
@@ -176,6 +194,8 @@ class GameplayScene(Scene):
                 s = raw_input("Level name:")
                 self.load(s)
                 return
+            elif action == 'help':
+                self.show_help()
             elif action.startswith('move'):
                 oldx, oldy = self.player.x, self.player.y
                 if hasattr(self.player, action):
@@ -205,6 +225,8 @@ class GameplayScene(Scene):
                     view.put_char(x, y, ord(self.ground.icon), self.ground.fg, bg)
             # Draw tiles
             for tile in  self.level.tiles:
+                if tile.type in ['invis']:
+                    continue
                 bg = tile.bg.lerped(random.choice(self.lightprism), min(.2, random.random()))
                 cell = self.map.cell(tile.x, tile.y)
                 if cell.lit:# or tile.name=='stone':
@@ -215,6 +237,8 @@ class GameplayScene(Scene):
             self.view.set_fore(p.x, p.y, p.fg)
             # Draw entities
             for ent in  self.level.entities:
+                if ent.type in ['invis']:
+                    continue
                 cell = self.map.cell(ent.x, ent.y)
                 if cell.lit:
                     self.view.set_char(ent.x, ent.y, ord(ent.icon))

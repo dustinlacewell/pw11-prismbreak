@@ -1,5 +1,5 @@
 import os, pickle
-
+from random import randint
 from pytcod import *
 
 from src import entities
@@ -74,14 +74,15 @@ class EditorScene(Scene):
         print "Level '{0}' saved".format(filename)
 
     def load(self, filename):
+        
         try:
             fobj = open(os.path.join("data/levels", filename + '.lvl'), 'r')
             self.level = pickle.load(fobj)
-            del self.level.links['\tstart']
             self.reset_editor()
             self.dirty = True
             print "Level '{0}' loaded".format(filename)
-        except:
+        except Exception, e:
+            raise e
             print "Unable to load '{0}'".format(filename)
 
     def update(self):
@@ -102,10 +103,10 @@ class EditorScene(Scene):
                 self.prev_brush()
                 print "CURRENT BRUSH:", self.brush.name
             elif action == 'save':
-                s = raw_input("Level name:")
+                s = raw_input("Level name:").strip()
                 self.save(s)
             elif action == 'load':
-                s = raw_input("Level name:")
+                s = raw_input("Level name:").strip()
                 self.load(s)
 
 	mouse = self.app.window.mouseinfo
@@ -114,7 +115,7 @@ class EditorScene(Scene):
             if pressed(K_CONTROL):
                 mx = mouse.cx
                 my = mouse.cy
-                link_dest = raw_input("Link level name: ")
+                link_dest = raw_input("Link level name: ").strip()
                 self.level.links[link_dest] = (mx, my)
                 print "LEVEL LINK SET:", link_dest, mx, my
         elif mouse.mpressed:
@@ -135,8 +136,21 @@ class EditorScene(Scene):
                 method = self.build if self.mode == 't' else self.place
                 args = []
                 if self.brush.name in ['upexit', 'downexit']:
-                    linkname = raw_input("Level name to link: ")
+                    linkname = raw_input("Level name to link: ").strip()
                     args.append(linkname)
+                elif self.brush.name == 'msgtrigger':
+                    print "Input message:"
+                    message = raw_input("").strip()
+                    if not message:
+                        print "Canceled!"
+                        self.mark = None
+                        self.dirty = True
+                        return
+                    title = raw_input("Title:")
+                    uuid = randint(100000000000000, 999999999999999)
+                    args.append(uuid)
+                    args.append(message)
+                    args.append(title)
                 for ix in xiter:
                     for iy in yiter:
                         method(self.mark[0] + ix, self.mark[1] + iy, self.brush, *args)

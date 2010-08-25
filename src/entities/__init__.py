@@ -73,4 +73,23 @@ class Entity(object):
         dy = self.y + 1
         self.do_move(game, dx, dy)
 
+    def move_upleft(Self, game):
+        dx = self.x - 1
+        dy = self.y - 1
+        self.do_move(game, dx, dy)
+
+    def move_upright(self, game):
+        dx = self.x + 1
+        dy = self.y - 1
+        self.do_move(game, dx, dy)
+
+    def move_downleft(self, game):
+        dx = self.x - 1
+        dy = self.y + 1
+        self.do_move(game, dx, dy)
+        
+    def move_downright(self,game):
+        dx = self.x + 1
+        dy = self.y + 1
+        self.do_move(game, dx, dy)
 

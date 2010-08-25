@@ -8,10 +8,12 @@ def get( command_name ):
 
 class Entity(object):
     name = 'none'
+    type = 'wall'
     icon = 'X'
     fg = Color(0, 0, 255)
     bg = Color(255, 0, 0)
     block = False
+    transparent = False
 
     
     def __init__(self, x, y):
@@ -24,6 +26,8 @@ class Entity(object):
             0 <= y < level.h
 
     def thing_at_dest(self, game, x, y):
+        if (x, y) == (game.player.x, game.player.y):
+            return game.player
         level = game.level
         ent = level.ent_at(x, y)
         if ent:

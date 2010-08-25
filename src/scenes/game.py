@@ -1,4 +1,5 @@
 import os, pickle, random
+from copy import copy
 
 from pytcod import *
 
@@ -13,12 +14,16 @@ class GameplayScene(Scene):
 
     def __init__(self):
 	self.dirty = True
-        self.prism = []
+        self.darkprism = []
+        self.lightprism = []
         for x in range(25):
             rnd = random.random()
             rndc = Color(random.randint(128, 255), random.randint(128, 255), random.randint(128, 255))
+            bg = BLACK.lerped(rndc, min(.04,max(.02, rnd)))
+            self.darkprism.append(bg)
+            rndc = Color(random.randint(128, 255), random.randint(128, 255), random.randint(128, 255))
             bg = BLACK.lerped(rndc, min(.07,max(.04, rnd)))
-            self.prism.append(bg)
+            self.lightprism.append(bg)
             
 
     def enter(self, app):
@@ -29,9 +34,10 @@ class GameplayScene(Scene):
         self.map = None
         self.levelname = 'start'
         sx, sy = self.load(self.first_level)
-        
+
         self.player = entities.get('player')(sx, sy)
-        
+        self._player = copy(self.player)
+
         self.dirty = True
 
     def remove(self, entity):
@@ -54,10 +60,9 @@ class GameplayScene(Scene):
                 self.map.radius = int(self.app.conf.get('game', 'wiz_fov'))
                 self.map.lightwalls = True
                 for tile in self.level.tiles:
-                    if tile.block:
-                        cell = self.map.cell(tile.x, tile.y)
-                        cell.walkable = False
-                        cell.transparent = False
+                    cell = self.map.cell(tile.x, tile.y)
+                    cell.walkable = tile.block
+                    cell.transparent = tile.transparent
                 self.map.compute_fov(sx, sy)
                 return sx, sy
         except Exception, e:
@@ -92,22 +97,23 @@ class GameplayScene(Scene):
     def draw(self, view, force=False):
         if self.dirty:
         # Clear to bg color
-            #        self.view.clear_ex(0, 0,
-            #                           self.view.width, self.view.height, 
-            #                           ord(self.ground.icon), 
-            #                           self.ground.fg, self.ground.bg)
+            self.view.clear_ex(0, 0,
+                               self.view.width, self.view.height, 
+                               ord(self.ground.icon), 
+                               self.ground.fg, self.ground.bg)
 
             for x in xrange(view.width):
                 for y in xrange(view.height):
-                    bg = random.choice(self.prism)
+                    bg = random.choice(self.darkprism)
                     if self.map.cell(x, y).lit:
+                        bg = random.choice(self.lightprism)
                         bg = bg.lerped(YELLOW, .04)
                     view.put_char(x, y, ord(self.ground.icon), self.ground.fg, bg)
                     
             for tile in  self.level.tiles:
-                bg = tile.bg.lerped(random.choice(self.prism), min(.2, random.random()))
+                bg = tile.bg.lerped(random.choice(self.lightprism), min(.2, random.random()))
                 cell = self.map.cell(tile.x, tile.y)
-                if cell.lit or tile.name=='stone':
+                if cell.lit:# or tile.name=='stone':
                     self.view.put_char(tile.x, tile.y, ord(tile.icon), tile.fg, bg)
             for ent in  self.level.entities:
                 cell = self.map.cell(ent.x, ent.y)

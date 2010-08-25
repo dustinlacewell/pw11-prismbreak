@@ -28,6 +28,7 @@ class EditorScene(Scene):
         self.delmark = None
         self.markmat = entities.get('mark')
         self.ground = entities.get('ground')
+        
         print "CURRENT BRUSH:", self.brush
 
     def build(self, x, y, etype, *args, **kwargs):
@@ -66,6 +67,7 @@ class EditorScene(Scene):
     brush = property(_getbrush)
 
     def save(self, filename):
+        filename = filename.strip()
         print os.getcwd()
         fobj = open(os.path.join("data/levels", filename + '.lvl'), 'w')
         pickle.dump(self.level, fobj)
@@ -75,6 +77,7 @@ class EditorScene(Scene):
         try:
             fobj = open(os.path.join("data/levels", filename + '.lvl'), 'r')
             self.level = pickle.load(fobj)
+            del self.level.links['\tstart']
             self.reset_editor()
             self.dirty = True
             print "Level '{0}' loaded".format(filename)

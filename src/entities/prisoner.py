@@ -1,3 +1,5 @@
+
+
 import random
 
 from pytcod import *
@@ -7,7 +9,7 @@ from src.entities import Entity
 class Prisoner(Entity):
     name = 'prisoner'
     icon = "P"
-    fg = Color(255, 0, 0)
+    fg = Color(208, 183, 82)
     bg = Color(31, 33, 37)
     block = True
 

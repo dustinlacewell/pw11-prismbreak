@@ -10,5 +10,6 @@ class Player(Entity):
     fg = Color(100, 63, 161)
     bg = Color(31, 33, 37)
     block = True
+    scrap = 0
 
 exported_class = Player

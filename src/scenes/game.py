@@ -38,6 +38,9 @@ class GameplayScene(Scene):
         if entity in self.level.entities:
             self.level.entities.remove(entity)
 
+    def add(self, entity):
+        self.level.entities.append(entity)
+
     def load(self, filename):
         try:
             fobj = open(os.path.join("data/levels", filename + '.lvl'), 'r')
@@ -48,7 +51,7 @@ class GameplayScene(Scene):
                 self.levelname = filename
                 self.map = Map(self.app.view.width, self.app.view.height)
                 self.map.clear(transparent=True, walkable=True)
-                self.map.radius = 12
+                self.map.radius = int(self.app.conf.get('game', 'wiz_fov'))
                 self.map.lightwalls = True
                 for tile in self.level.tiles:
                     if tile.block:

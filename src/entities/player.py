@@ -14,11 +14,7 @@ class Player(Entity):
     scrap = 0
 
     def touched(self, game, ent):
-        print "PLAYER TOUCHED"
         if ent.name == 'robotguard':
-            p = game._player
-            game.load(game.levelname)
-            game.player = p
-            game._player = copy(game.player)
+            game.player_death(ent)
 
 exported_class = Player

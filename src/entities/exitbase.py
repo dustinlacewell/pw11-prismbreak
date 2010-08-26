@@ -14,6 +14,7 @@ class Exit(Entity):
     def touched(self, game, ent):
         if ent.name == 'player':
             p = game.player
+            game.lastlevel = game.levelname
             sx, sy = game.load(self.linkname)
             p.x = sx
             p.y = sy

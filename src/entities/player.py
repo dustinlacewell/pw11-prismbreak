@@ -14,7 +14,7 @@ class Player(Entity):
     scrap = 0
 
     def touched(self, game, ent):
-        if ent.name == 'robotguard':
+        if ent.type == 'guard':
             game.player_death(ent)
 
 exported_class = Player

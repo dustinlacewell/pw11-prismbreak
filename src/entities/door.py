@@ -24,6 +24,5 @@ class Door(Entity):
                 ydif = abs(ent.y - self.y)
                 if xdif == 1 and ydif == 0 or xdif == 0 and ydif == 1 or xdif == 1 and ydif == 1:
                     game.opendoor(self.uuid)
-                    if ent.type == 'guard': 
 
 exported_class = Door

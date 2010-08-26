@@ -23,9 +23,12 @@ class RobotGuard(Entity):
         if self.coord_in_bounds(game, dx, dy):
             blocker = self.thing_at_dest(game, dx, dy)
             if blocker:
-                print "p", self.x, self.y, game.player.x, game.player.y
                 print "robot blocked by", blocker.name
                 if blocker.name in [self.name, game.player.name, 'msgtrigger']:
+                    self.x = dx
+                    self.y = dy
+                    blocker.touched(game, self)
+                elif blocker.type == 'guard':
                     self.x = dx
                     self.y = dy
                     blocker.touched(game, self)

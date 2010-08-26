@@ -19,12 +19,20 @@ class KeyGuard(RobotGuard):
                     self.x = dx
                     self.y = dy
                     blocker.touched(game, self)
-                elif blocker.name == 'robotguard':
+                elif blocker.type == 'guard':
                     game.remove(self)
                     game.remove(blocker)
                     game.add(get('key')(dx, dy))
             else:
                 self.x = dx
                 self.y = dy
+
+    def touched(self, game, ent):
+        print "KEYGUARD TOUCHED"
+        if ent.type == 'guard':
+            game.remove(ent)
+            game.remove(self)
+            game.add(get('key')(self.x, self.y))
+
 
 exported_class = KeyGuard

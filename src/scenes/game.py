@@ -1,4 +1,4 @@
-import os, pickle, random
+import os, pickle, random, operator
 from textwrap import wrap
 from copy import copy
 
@@ -77,7 +77,11 @@ class GameplayScene(Scene):
     def __init__(self):
 	self.dirty = True
         self.init_prism_palettes()
+        self.deadguards = set()
+        self.killedguards = set()
         self.seenmsgs = set()
+        self.opendoors = set()
+        self.keys = 0
 
     def init_prism_palettes(self):
         self.darkprism = []
@@ -101,31 +105,42 @@ class GameplayScene(Scene):
         
         self.ground = entities.get('ground')
         self.map = None
-        self.levelname = 'start'
+        self.lastlevel = 'start'
         sx, sy = self.load(self.first_level)
 
         self.player = entities.get('player')(sx, sy)
         self._player = copy(self.player)
         self.playerdead = False
-
+        self.casting = None
+        self.castline = None
+        self.mouse = None
         self.frame = None
+        self.lastmouse = None
         self.dirty = True
 
+        self.show_story()
+
     def remove(self, entity):
+        if entity.type == 'guard' and entity.uuid not in self.killedguards:
+            self.killedguards.add(entity.uuid)
         if entity in self.level.entities:
             self.level.entities.remove(entity)
 
     def add(self, entity):
         self.level.entities.append(entity)
 
-    def load(self, filename):
+    def load(self, filename, reset=False):
+        if not reset:
+            for guard in self.killedguards:
+                self.deadguards.add(guard)
+        self.killedguards = set()
         try:
             fobj = open(os.path.join("data/levels", filename + '.lvl'), 'r')
             self.level = pickle.load(fobj)
-            if self.levelname in self.level.links:
-                print self.level.links, self.levelname, filename
-                sx, sy = self.level.links[self.levelname]
-                self.levelname = filename
+            self.levelname = filename
+            print "LOAD,", filename, "LASTLEVEL", self.lastlevel
+            if self.lastlevel in self.level.links:
+                sx, sy = self.level.links[self.lastlevel]
                 self.map = Map(self.app.view.width, self.app.view.height)
                 self.map.clear(transparent=True, walkable=True)
                 self.map.radius = int(self.app.conf.get('game', 'wiz_fov'))
@@ -134,6 +149,12 @@ class GameplayScene(Scene):
                     cell = self.map.cell(tile.x, tile.y)
                     cell.walkable = not tile.block
                     cell.transparent = tile.transparent
+                remove = []
+                for ent in self.level.entities:
+                    if ent.type == 'guard' and ent.uuid in self.deadguards:
+                        remove.append(ent)
+                for guard in remove:
+                    self.level.entities.remove(guard)
                 self.map.compute_fov(sx, sy)
                 return sx, sy
         except Exception, e:
@@ -143,10 +164,15 @@ class GameplayScene(Scene):
 
     def reset(self):
         p = self._player
-        self.load(self.levelname)
+        print 'self.levelname', self.levelname
+        ppos = self.load(self.levelname, reset=True)
+        if ppos:
+            p.x, p.y = ppos
         self.player = p
         self._player = copy(self.player)
         self.playerdead = False
+        for door in self.opendoors:
+            self.opendoor(door, locked=True)
         self.map.compute_fov(self.player.x, self.player.y)
 
     def player_death(self, ent):
@@ -159,6 +185,70 @@ class GameplayScene(Scene):
         y = self.view.height / 2
         self.frame = MessageFrame(x, y, width, height, message, title, wrapped)        
 
+    def resetdoors(self):
+        for ent in self.level.entities:
+            if ent.name == 'door':
+                ent.icon = "+"
+                ent.block = True
+                ent.transparent = True
+                self.map.set_properties(ent.x, ent.y, walkable = False, transparent=False)                    
+
+    def opendoor(self, uuid, locked=False):
+        if locked:
+            removed = []
+            for entity in self.level.entities:
+                if entity.name == 'lockeddoor' and entity.uuid == uuid:
+                    removed.append(entity)
+            for ent in removed:
+                self.level.entities.remove(ent)
+            if uuid not in self.opendoors:
+                self.opendoors.add(uuid)
+                return True
+        else:
+            for ent in self.level.entities:
+                if ent.name == 'door' and ent.uuid == uuid:
+                    ent.icon = " "
+                    ent.block = False
+                    print "DOOR UnLOCK", ent, ent.block
+                    ent.transparent = True
+                    self.map.set_properties(ent.x, ent.y, walkable = True, transparent=True)
+                    self.map.compute_fov(self.player.x, self.player.y)
+
+
+    def show_story(self):
+        story = [
+            "",
+            " Dearly beloved wife,",
+            "",
+            " I send you this message through mystic",
+            " channels to inform you that I have",
+            " been delayed in my travels.",
+            "",
+            " On my way to the dungeon rumored to",
+            " hold the prized Amulet of Yendor, I",
+            " took camp among some orchards to the",
+            " west of the Narathar Banks. At night",
+            " I was caught flatfooted by a troupe",
+            " of magic hating bots from the",
+            " League of the Robotguard.",
+            "",
+            " The bots have imprisoned me in their",
+            " magic-nullifying gulag known as the",
+            " Prismguard.",
+            "",
+            " I will attempt my escape and return",
+            " post-haste to the task at hand. My",
+            " travels have certainly been delayed",
+            " but trust that I long to return to you",
+            " at once.",
+            "",
+            " Your grey-bearded love,",
+            " Wizard."
+            ]
+        self.set_frame(48, 30, story, "And the story goes...", False)
+        self.dirty = True
+       
+        
     def show_help(self):
         help = [
             "How to play:",
@@ -171,22 +261,88 @@ class GameplayScene(Scene):
         ]
 
         self.set_frame(32, 9, help, "Prism Break Help", False)
+        self.dirty = True
+
+    def check_teleport(self, cell):
+        for ent in self.level.entities:
+            if ent.x == cell.x and ent.y == cell.y and ent.block:
+                return None
+        if cell.lit and cell.walkable:
+            return Line(self.player.x, self.player.y, cell.x, cell.y)
+
+    def check_block(self, cell):
+        for ent in self.level.entities:
+            if ent.x == cell.x and ent.y == cell.y:
+                return None
+        if cell.lit and cell.walkable:
+            return Line(self.player.x, self.player.y, cell.x, cell.y)
+
+    def check_stun(self, cell):
+        for ent in self.level.entities:
+            if ent.x == cell.x and ent.y == cell.y and ent.type == 'guard':
+                return Line(self.player.x, self.player.y, ent.x, ent.y)
+
+    def cast_teleport(self, cell):
+        self.player.do_move(self, cell.x, cell.y)
+        return True
+
+    def cast_block(self, cell):
+        block = entities.get('block')
+        self.level.entities.append(block(cell.x, cell.y))
+        self.map.set_properties(cell.x, cell.y, 
+                                transparent=block.transparent,
+                                walkable=block.block)
+        return True
+
+    def cast_stun(self, cell):
+        ent = self.level.ent_at(cx, cy)
+        ent.stun += 2
+        ent.set_path(self)
+        return True
 
     def update(self):
-	action = self.app.input.check_for_action('game')
-	if action:
+	self.mouse = self.app.window.mouseinfo
+        action = self.app.input.check_for_action('game')
+        oldx, oldy = self.player.x, self.player.y
+        
+
+        if self.casting:
+            cx, cy = self.mouse.cx, self.mouse.cy
+            if (cx, cy) != self.lastmouse:
+                self.lastmouse = (cx, cy)
+                mcell = self.map.cell(cx, cy)
+                checkname = 'check_%s' % self.casting
+                if hasattr(self, checkname):
+                    checker = getattr(self, checkname)
+                    self.castline = checker(mcell)
+                    self.dirty = True
+            if self.mouse.lpressed and self.castline:
+                castname = "cast_%s" % self.casting
+                castcell = self.map.cell(cx, cy)
+                if hasattr(self, castname):
+                    caster = getattr(self, castname)
+                    if caster(castcell):
+                        self.update_entities()
+                        self.casting = None
+                        self.castline = None
+                        self.map.compute_fov(self.player.x, self.player.y)
+                        self.dirty = True
+            if action == "quit":
+                self.casting = None
+                self.castline = None
+                self.dirty = True
+        elif action:
             if self.frame:
                 if action == 'move_down':
                     self.frame.scroll_down()
                 elif action == 'move_up':
                     self.frame.scroll_up()
-                elif action == 'confirm':
+                elif action:
                     self.frame = None
                     if self.playerdead:
                         self.reset()
                 self.dirty = True
                 return
-            self.dirty = True
 	    if action == 'quit':
 		self.app.running = False
                 return
@@ -195,19 +351,37 @@ class GameplayScene(Scene):
                 self.load(s)
                 return
             elif action == 'help':
-                self.show_help()
+                self.show_story()
+            elif action == 'wait':
+                self.casting = 'block' #self.update_entities()
             elif action.startswith('move'):
-                oldx, oldy = self.player.x, self.player.y
                 if hasattr(self.player, action):
                     func = getattr(self.player, action)
                     func(self)
-                    if (oldx, oldy) != (self.player.x, self.player.y):
-                        for entity in self.level.entities:
-                            entity.update(self)
-
+        if (oldx, oldy) != (self.player.x, self.player.y):
             self.map.compute_fov(self.player.x, self.player.y)
-	mouse = self.app.window.mouseinfo
+            self.update_entities()
+            self.dirty = True
+        self.map.compute_fov(self.player.x, self.player.y)
 
+
+    def update_entities(self):
+        self.resetdoors()
+
+        active = []
+        for entity in self.level.entities:
+            if entity.type == 'guard':
+                entity.update_path(self)
+                if entity.path:
+                    active.append(entity)
+                    active.sort(key=operator.methodcaller('pathlength'))
+                    active.reverse()
+        for bot in active:
+            if bot in self.level.entities:
+                bot.update(self)
+        for entity in self.level.entities:
+            if entity.type != 'guard':
+                entity.update(self)
     def draw(self, view, force=False):
         if self.dirty:
             # Clear to bg color
@@ -231,10 +405,6 @@ class GameplayScene(Scene):
                 cell = self.map.cell(tile.x, tile.y)
                 if cell.lit:# or tile.name=='stone':
                     self.view.put_char(tile.x, tile.y, ord(tile.icon), tile.fg, bg)
-            # Draw Player
-            p = self.player
-            self.view.set_char(p.x, p.y, ord(p.icon))
-            self.view.set_fore(p.x, p.y, p.fg)
             # Draw entities
             for ent in  self.level.entities:
                 if ent.type in ['invis']:
@@ -243,9 +413,25 @@ class GameplayScene(Scene):
                 if cell.lit:
                     self.view.set_char(ent.x, ent.y, ord(ent.icon))
                     self.view.set_fore(ent.x, ent.y, ent.fg)
+            # Draw Player
+            if not self.playerdead:
+                p = self.player
+                self.view.set_char(p.x, p.y, ord(p.icon))
+                self.view.set_fore(p.x, p.y, p.fg)
             # Draw message frame
             if self.frame:
                 v = self.frame.view
                 self.view.blit(v, self.frame.x, self.frame.y)
+            if self.castline:
+                castline = list(self.castline)
+                for x, y in castline:
+                    cell = self.map.cell(x, y)
+                    if cell.lit and cell.walkable:
+                        bg = self.view.get_back(x, y)
+                        bg = bg.lerped(RED, .1)
+                        self.view.set_back(x, y, bg)
+                bg = self.view.get_back(x, y)
+                bg = bg.lerped(RED, .3)
+                self.view.set_back(x, y, bg)
         self.dirty = False
 exported_class = GameplayScene

@@ -8,6 +8,8 @@ from src.scenes import Scene
 from src.utils import dlog, dtrace
 from src.imports import get_all
 
+uniques = ['lockeddoor', 'door', 'robotguard', 'keyguard']
+
 class EditorScene(Scene):
     def __init__(self):
 	self.dirty = True
@@ -50,7 +52,7 @@ class EditorScene(Scene):
     def remove(self, entity):
         if entity in self.level.entities:
             self.level.entities.remove(entity)
-        
+
     def reset_editor(self):
         self.mode = 't'
         self.mark = None
@@ -151,6 +153,9 @@ class EditorScene(Scene):
                     args.append(uuid)
                     args.append(message)
                     args.append(title)
+                elif self.brush.name in uniques:
+                    uuid = randint(100000000000000, 999999999999999)
+                    args = [uuid]
                 for ix in xiter:
                     for iy in yiter:
                         method(self.mark[0] + ix, self.mark[1] + iy, self.brush, *args)

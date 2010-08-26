@@ -27,7 +27,6 @@ class Entity(object):
 
     def thing_at_dest(self, game, x, y):
         if (x, y) == (game.player.x, game.player.y):
-            print "thing was player"
             return game.player
         level = game.level
         ent = level.ent_at(x, y)
@@ -46,7 +45,6 @@ class Entity(object):
     def do_move(self, game, dx, dy):
         if self.coord_in_bounds(game, dx, dy):
             blocker = self.thing_at_dest(game, dx, dy)
-            print "My blocker", blocker, blocker.block if blocker else ""
             if not blocker or (blocker and not blocker.block):
                 self.x = dx
                 self.y = dy

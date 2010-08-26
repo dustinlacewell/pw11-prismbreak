@@ -23,6 +23,9 @@ class KeyGuard(RobotGuard):
                     game.remove(self)
                     game.remove(blocker)
                     game.add(get('key')(dx, dy))
+                elif not blocker.block:
+                    self.x = dx
+                    self.y = dy
             else:
                 self.x = dx
                 self.y = dy

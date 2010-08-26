@@ -32,6 +32,9 @@ class RobotGuard(Entity):
                     self.x = dx
                     self.y = dy
                     blocker.touched(game, self)
+                elif not blocker.block:
+                    self.x = dx
+                    self.y = dy
             else:
                 self.x = dx
                 self.y = dy
@@ -69,6 +72,7 @@ class RobotGuard(Entity):
                 self.stun = 1
             elif self.path.destination != (player.x, player.y):
                 self.set_path(game)
+
     def update(self, game):
         p = game.player
         if (p.x, p.y) == (self.x, self.y):

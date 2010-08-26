@@ -190,7 +190,7 @@ class GameplayScene(Scene):
             if ent.name == 'door':
                 ent.icon = "+"
                 ent.block = True
-                ent.transparent = True
+                ent.transparent = False
                 self.map.set_properties(ent.x, ent.y, walkable = False, transparent=False)                    
 
     def opendoor(self, uuid, locked=False):
@@ -209,7 +209,6 @@ class GameplayScene(Scene):
                 if ent.name == 'door' and ent.uuid == uuid:
                     ent.icon = " "
                     ent.block = False
-                    print "DOOR UnLOCK", ent, ent.block
                     ent.transparent = True
                     self.map.set_properties(ent.x, ent.y, walkable = True, transparent=True)
                     self.map.compute_fov(self.player.x, self.player.y)
@@ -297,6 +296,7 @@ class GameplayScene(Scene):
     def cast_stun(self, cell):
         ent = self.level.ent_at(cx, cy)
         ent.stun += 2
+
         ent.set_path(self)
         return True
 
@@ -304,7 +304,6 @@ class GameplayScene(Scene):
 	self.mouse = self.app.window.mouseinfo
         action = self.app.input.check_for_action('game')
         oldx, oldy = self.player.x, self.player.y
-        
 
         if self.casting:
             cx, cy = self.mouse.cx, self.mouse.cy
@@ -367,21 +366,20 @@ class GameplayScene(Scene):
 
     def update_entities(self):
         self.resetdoors()
-
+        for entity in self.level.entities:
+            if entity.type != 'guard':
+                entity.update(self)
         active = []
         for entity in self.level.entities:
             if entity.type == 'guard':
                 entity.update_path(self)
                 if entity.path:
                     active.append(entity)
-                    active.sort(key=operator.methodcaller('pathlength'))
-                    active.reverse()
+        active.sort(key=operator.methodcaller('pathlength'))
+        active.reverse()
         for bot in active:
             if bot in self.level.entities:
                 bot.update(self)
-        for entity in self.level.entities:
-            if entity.type != 'guard':
-                entity.update(self)
     def draw(self, view, force=False):
         if self.dirty:
             # Clear to bg color
@@ -407,12 +405,19 @@ class GameplayScene(Scene):
                     self.view.put_char(tile.x, tile.y, ord(tile.icon), tile.fg, bg)
             # Draw entities
             for ent in  self.level.entities:
-                if ent.type in ['invis']:
+                if ent.type in ['invis', 'guard']:
                     continue
                 cell = self.map.cell(ent.x, ent.y)
                 if cell.lit:
                     self.view.set_char(ent.x, ent.y, ord(ent.icon))
                     self.view.set_fore(ent.x, ent.y, ent.fg)
+            # Draw robots
+            for ent in  self.level.entities:
+                if ent.type in ['guard']:
+                    cell = self.map.cell(ent.x, ent.y)
+                    if cell.lit:
+                        self.view.set_char(ent.x, ent.y, ord(ent.icon))
+                        self.view.set_fore(ent.x, ent.y, ent.fg)
             # Draw Player
             if not self.playerdead:
                 p = self.player

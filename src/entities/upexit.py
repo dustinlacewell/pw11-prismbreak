@@ -5,7 +5,7 @@ from src.entities import exitbase
 
 class UpExit(exitbase.Exit):
     name = 'upexit'
-    icon = "^"
+    icon = "["
     bg = Color(0, 0, 0)
     fg = Color(153, 182, 196)
 

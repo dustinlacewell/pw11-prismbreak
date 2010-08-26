@@ -3,14 +3,14 @@ from pytcod import *
 from src.entities import Entity
 
 
-class Key(Entity):
+class MasterKey(Entity):
     name = 'key'
     icon =  '{'
-    fg = YELLOW
+    fg = GREEN
 
     def touched(self, game, ent):
         if ent.name == 'player':
-            game.keys += 1
+            player.masterkey = True
             game.remove(self)
 
-exported_class = Key
+exported_class = MasterKey

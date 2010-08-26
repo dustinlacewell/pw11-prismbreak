@@ -9,19 +9,6 @@ from src.scenes import Scene
 from src import entities
 from src.utils import dlog, dtrace
 
-death_messages = [
-    "Ack, stupid bots!",
-    "The wrong move!",
-    "Ugh, not again!",
-    "Damn bucket of bolts!",
-    "Blasted tin-head!",
-    "Doggone it!",
-    "Wretched automaton!"
-]
-
-def random_deathmsg():
-    return random.choice(death_messages)
-
 class MessageFrame(object):
     def __init__(self, x, y, width, height, message, title,wrapped=True):        
         self.x = x - (width/2)
@@ -45,7 +32,6 @@ class MessageFrame(object):
         self.view.bg = BLACK
         self.view.fg = WHITE
         self._render()
-        print self.message, self.height, self.nblines, self.maxline
         
     def _render(self):
         self.view.clear()
@@ -81,7 +67,11 @@ class GameplayScene(Scene):
         self.killedguards = set()
         self.seenmsgs = set()
         self.opendoors = set()
+        self.droppedkeys = {}
+        self.droppedscrap = {}
+        self.masterdoor = False
         self.keys = 0
+
 
     def init_prism_palettes(self):
         self.darkprism = []
@@ -91,7 +81,7 @@ class GameplayScene(Scene):
             rndc = Color(random.randint(128, 255), 
                          random.randint(128, 255), 
                          random.randint(128, 255))
-            bg = BLACK.lerped(rndc, min(.04,max(.02, rnd)))
+            bg = BLACK.lerped(rndc, min(.07,max(.04, rnd)))
             self.darkprism.append(bg)
             rndc = Color(random.randint(128, 255), 
                          random.randint(128, 255), 
@@ -107,7 +97,7 @@ class GameplayScene(Scene):
         self.map = None
         self.lastlevel = 'start'
         sx, sy = self.load(self.first_level)
-
+        print self.droppedscrap
         self.player = entities.get('player')(sx, sy)
         self._player = copy(self.player)
         self.playerdead = False
@@ -118,6 +108,12 @@ class GameplayScene(Scene):
         self.lastmouse = None
         self.dirty = True
 
+        self.bg = Console(self.view.width, self.view.height)
+        for x in xrange(self.view.width):
+            for y in xrange(self.view.height):
+                bg = random.choice(self.darkprism)
+                self.bg.put_char(x, y, ord(self.ground.icon), self.ground.fg, bg)
+
         self.show_story()
 
     def remove(self, entity):
@@ -125,9 +121,17 @@ class GameplayScene(Scene):
             self.killedguards.add(entity.uuid)
         if entity in self.level.entities:
             self.level.entities.remove(entity)
+        if entity in self.droppedscrap[self.levelname]:
+            self.droppedscrap[self.levelname].remove(entity)
+        if entity in self.droppedkeys[self.levelname]:
+            self.droppedkeys[self.levelname].remove(entity)
 
     def add(self, entity):
         self.level.entities.append(entity)
+        if entity.name == 'key':
+            self.droppedkeys[self.levelname].append(entity)
+        if entity.name == 'scrap':
+            self.droppedscrap[self.levelname].append(entity)
 
     def load(self, filename, reset=False):
         if not reset:
@@ -138,6 +142,11 @@ class GameplayScene(Scene):
             fobj = open(os.path.join("data/levels", filename + '.lvl'), 'r')
             self.level = pickle.load(fobj)
             self.levelname = filename
+            if self.levelname not in self.droppedkeys:
+                self.droppedkeys[self.levelname] = []
+            if self.levelname not in self.droppedscrap:
+                self.droppedscrap[self.levelname] = []
+            
             print "LOAD,", filename, "LASTLEVEL", self.lastlevel
             if self.lastlevel in self.level.links:
                 sx, sy = self.level.links[self.lastlevel]
@@ -153,8 +162,11 @@ class GameplayScene(Scene):
                 for ent in self.level.entities:
                     if ent.type == 'guard' and ent.uuid in self.deadguards:
                         remove.append(ent)
+                    elif ent.name == 'masterdoor' and self.masterdoor:
+                        remove.append(ent)
                 for guard in remove:
                     self.level.entities.remove(guard)
+                self.level.entities += self.droppedkeys[self.levelname] + self.droppedscrap[self.levelname]
                 self.map.compute_fov(sx, sy)
                 return sx, sy
         except Exception, e:
@@ -177,7 +189,7 @@ class GameplayScene(Scene):
 
     def player_death(self, ent):
         self.playerdead = True
-        msg = random_deathmsg()
+        msg = self.player.random_deathmsg(self, ent)
         self.set_frame(25, 5, msg, "Wiz says:")
 
     def set_frame(self, width, height, message, title, wrapped=True):
@@ -256,10 +268,14 @@ class GameplayScene(Scene):
             " 3. If two robots collide, they will drop",
             "    some scrap. You might need it later on.",
             " ",
-            "Move:        Arrow Keys",
+            "Check userinput.conf to check/change keys!",
+            "",
+            "            You have {0} scrap.".format(self.player.scrap),
+            "",
+            "            You have {0} keys.".format(self.keys),
         ]
 
-        self.set_frame(32, 9, help, "Prism Break Help", False)
+        self.set_frame(45, 13, help, "Prism Break Help", False)
         self.dirty = True
 
     def check_teleport(self, cell):
@@ -336,7 +352,7 @@ class GameplayScene(Scene):
                     self.frame.scroll_down()
                 elif action == 'move_up':
                     self.frame.scroll_up()
-                elif action:
+                elif action in ['quit', 'help', 'confirm']:
                     self.frame = None
                     if self.playerdead:
                         self.reset()
@@ -350,15 +366,25 @@ class GameplayScene(Scene):
                 self.load(s)
                 return
             elif action == 'help':
-                self.show_story()
+                self.show_help()
             elif action == 'wait':
-                self.casting = 'block' #self.update_entities()
+                self.update_entities()
+                self.dirty = True
+            elif action in ['teleport', 'block', 'stun']:
+                if not self.player.staff:
+                    self.set_frame(40, 4, "I wish I could, but they took my staff!", "Wizard says:")
+                    self.dirty = True
+                elif self.player.scrap == 0:
+                    self.set_frame(16, 4, "I don't have any scrap.", "Wizard says:")
+                    self.dirty = True
+                else:
+                    self.player.scrap -= 1
+                    self.casting = action
             elif action.startswith('move'):
                 if hasattr(self.player, action):
                     func = getattr(self.player, action)
                     func(self)
         if (oldx, oldy) != (self.player.x, self.player.y):
-            self.map.compute_fov(self.player.x, self.player.y)
             self.update_entities()
             self.dirty = True
         self.map.compute_fov(self.player.x, self.player.y)
@@ -366,15 +392,17 @@ class GameplayScene(Scene):
 
     def update_entities(self):
         self.resetdoors()
+        bots = []
         for entity in self.level.entities:
             if entity.type != 'guard':
                 entity.update(self)
+            else:
+                bots.append(entity)
         active = []
-        for entity in self.level.entities:
-            if entity.type == 'guard':
-                entity.update_path(self)
-                if entity.path:
-                    active.append(entity)
+        for entity in bots:
+            entity.update_path(self)
+            if entity.path:
+                active.append(entity)
         active.sort(key=operator.methodcaller('pathlength'))
         active.reverse()
         for bot in active:
@@ -382,19 +410,18 @@ class GameplayScene(Scene):
                 bot.update(self)
     def draw(self, view, force=False):
         if self.dirty:
+            #self.view.bg = BLACK
+            #self.view.clear()
             # Clear to bg color
-            self.view.clear_ex(0, 0,
-                               self.view.width, self.view.height, 
-                               ord(self.ground.icon), 
-                               self.ground.fg, self.ground.bg)
+
             # Draw ground and FOV
+            self.view.blit(self.bg, 0, 0)
             for x in xrange(view.width):
                 for y in xrange(view.height):
-                    bg = random.choice(self.darkprism)
                     if self.map.cell(x, y).lit:
                         bg = random.choice(self.lightprism)
                         bg = bg.lerped(YELLOW, .04)
-                    view.put_char(x, y, ord(self.ground.icon), self.ground.fg, bg)
+                        view.put_char(x, y, ord(self.ground.icon), self.ground.fg, bg)
             # Draw tiles
             for tile in  self.level.tiles:
                 if tile.type in ['invis']:

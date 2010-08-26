@@ -6,6 +6,7 @@ from src.entities import Entity
 
 class Electricity(Entity):
     name = 'electricity'
+    type = 'electricity'
     icon = "*"
     colors = [
         Color(45, 37, 202),
@@ -16,16 +17,14 @@ class Electricity(Entity):
     ]
     fg = BLUE
     bg = Color(31, 33, 37)
-    block = False
 
     def update(self, game):
         level = game.level
         player = game.player
-
         self.fg = BLUE.lerped(YELLOW, random.random())
 
     def touched(self, game, ent):
         if ent.name == "player":
-            print "PLAYER KILLED"
+            game.player_death(self)
 
 exported_class = Electricity

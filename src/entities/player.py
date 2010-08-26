@@ -10,11 +10,40 @@ class Player(Entity):
     icon = "W"
     fg = Color(100, 63, 161)
     bg = Color(31, 33, 37)
-    block = True
+    staff = True
+    masterkey = False
     scrap = 0
+
+    guard_messages = [
+        "Ack, stupid bots!",
+        "The wrong move!",
+        "Ugh, not again!",
+        "Damn bucket of bolts!",
+        "Blasted tin-head!",
+        "Doggone it!",
+        "Wretched automaton!"
+    ]
+
+    electricity_messages = [
+        "You were zapped!",
+        "Yeah I should probably avoid the live electricity.",
+        "Who thought live wires were dangerous?",
+        "Note to self: don't touch power lines",
+    ]
+
+    
 
     def touched(self, game, ent):
         if ent.type == 'guard':
             game.player_death(ent)
+
+    def random_deathmsg(self, game, ent):
+        name = "%s_messages" % ent.type
+        if hasattr(self, name):
+            msg = random.choice(getattr(self, name))
+            return msg
+        return "ACK!"
+        
+        
 
 exported_class = Player

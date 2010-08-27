@@ -62,7 +62,10 @@ class InputMapper(object):
         if key.vkey != pytcod.K_CHAR:
             key_name = self.keylist[key.vkey]
         else:
-            key_name = chr(key.char)
+            try:
+                key_name = chr(key.char)
+            except ValueError:
+                pass
         if self.parser.has_option(section, key_name):
             return self.parser.get(section, key_name)
         

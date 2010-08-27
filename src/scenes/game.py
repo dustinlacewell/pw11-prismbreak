@@ -310,9 +310,8 @@ class GameplayScene(Scene):
         return True
 
     def cast_stun(self, cell):
-        ent = self.level.ent_at(cx, cy)
-        ent.stun += 2
-
+        ent = self.level.ent_at(cell.x, cell.y)
+        ent.stun += 3
         ent.set_path(self)
         return True
 

@@ -15,20 +15,11 @@ class KeyGuard(RobotGuard):
         if self.coord_in_bounds(game, dx, dy):
             blocker = self.thing_at_dest(game, dx, dy)
             if blocker:
-                if blocker.name in [game.player.name, 'msgtrigger']:
-                    self.x = dx
-                    self.y = dy
-                    blocker.touched(game, self)
-                elif blocker.type == 'guard':
+                if blocker.type == 'guard':
                     game.remove(self)
                     game.remove(blocker)
                     game.add(get('key')(dx, dy))
-                elif not blocker.block:
-                    self.x = dx
-                    self.y = dy
-            else:
-                self.x = dx
-                self.y = dy
+        super(KeyGuard, self).do_move(game, dx, dy)
 
     def touched(self, game, ent):
         print "KEYGUARD TOUCHED"

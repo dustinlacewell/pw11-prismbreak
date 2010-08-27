@@ -11,33 +11,12 @@ class RobotGuard(Entity):
     fg = Color(0, 0, 255)
     bg = Color(31, 33, 37)
     uuid = None
-    block = True
     path = None
     stun = 0
     
     def __init__(self, x, y, uuid):
         self.uuid = uuid
         super(RobotGuard, self).__init__(x, y)
-
-    def do_move(self, game, dx, dy):
-        if self.coord_in_bounds(game, dx, dy):
-            blocker = self.thing_at_dest(game, dx, dy)
-            if blocker:
-                print "robot blocked by", blocker.name
-                if blocker.name in [self.name, game.player.name, 'msgtrigger']:
-                    self.x = dx
-                    self.y = dy
-                    blocker.touched(game, self)
-                elif blocker.type == 'guard':
-                    self.x = dx
-                    self.y = dy
-                    blocker.touched(game, self)
-                elif not blocker.block:
-                    self.x = dx
-                    self.y = dy
-            else:
-                self.x = dx
-                self.y = dy
 
     def _get_fg(self):
         return RED if self.path else BLUE

@@ -11,6 +11,7 @@ class MsgTrigger(Entity):
     fg = BLUE
     bg = YELLOW
     block = False
+    transparent = True
     uid = None
 
     def __init__(self, x, y, uuid, message, title):

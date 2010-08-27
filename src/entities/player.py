@@ -7,6 +7,7 @@ from src.entities import Entity
 
 class Player(Entity):
     name = 'player'
+    type = 'player'
     icon = "W"
     fg = Color(100, 63, 161)
     bg = Color(31, 33, 37)

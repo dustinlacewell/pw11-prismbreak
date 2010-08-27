@@ -8,7 +8,7 @@ from src.scenes import Scene
 from src.utils import dlog, dtrace
 from src.imports import get_all
 
-uniques = ['lockeddoor', 'door', 'robotguard', 'keyguard']
+uniques = ['lockeddoor', 'door', 'robotguard', 'keyguard', 'masterguard']
 
 class EditorScene(Scene):
     def __init__(self):

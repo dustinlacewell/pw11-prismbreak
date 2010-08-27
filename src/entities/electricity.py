@@ -8,6 +8,8 @@ class Electricity(Entity):
     name = 'electricity'
     type = 'electricity'
     icon = "*"
+    transparent = True
+    block = False
     colors = [
         Color(45, 37, 202),
         Color(80, 71, 255),

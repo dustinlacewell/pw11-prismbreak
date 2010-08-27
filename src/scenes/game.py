@@ -137,6 +137,9 @@ class GameplayScene(Scene):
         if not reset:
             for guard in self.killedguards:
                 self.deadguards.add(guard)
+        else:
+            self.droppedscrap[filename] = []
+
         self.killedguards = set()
         try:
             fobj = open(os.path.join("data/levels", filename + '.lvl'), 'r')

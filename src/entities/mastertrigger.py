@@ -3,6 +3,8 @@ import random
 from pytcod import *
 from src.entities import Entity
 from src.entities.masterguard import MasterGuard
+from src.entities.masterdoor import MasterDoor
+
 
 class MasterTrigger(Entity):
     name = 'mastertrigger'
@@ -23,5 +25,12 @@ class MasterTrigger(Entity):
                 g = MasterGuard( 40, 40)
                 print "GUARD CREATED"
                 game.add(g)
-
+                remove = []
+                uuid = 'MASTERDOOR1'
+                for entity in game.level.entities:
+                    if entity.name == 'door':
+                        remove.append(entity)
+                for door in remove:
+                    game.level.entities.remove(door)
+                    game.add(MasterDoor(door.x, door.y, uuid))
 exported_class = MasterTrigger

@@ -14,6 +14,7 @@ class Player(Entity):
     staff = True
     masterkey = False
     scrap = 0
+    keys = 2
 
     guard_messages = [
         "Ack, stupid bots!",

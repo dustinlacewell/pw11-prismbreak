@@ -6,6 +6,7 @@ from src.entities import Entity
 
 class LockedDoor(Entity):
     name = 'lockeddoor'
+    type = 'door'
     icon = "+"
     fg = YELLOW
     bg = YELLOW
@@ -21,11 +22,8 @@ class LockedDoor(Entity):
         p = game.player
         xdif = abs(p.x - self.x)
         ydif = abs(p.y - self.y)
-        if xdif == 1 and ydif == 0 or \
-        xdif == 0 and ydif == 1 or \
-        xdif == 0 and ydif == 0:
-            if game.keys and game.opendoor(self.uuid, locked=True):
-                game.keys -= 1
-                game.set_frame(20, 3, "Door opened.", "", wrapped=True)
+        if xdif == 1 and ydif == 0 or xdif == 0 and ydif == 1 or xdif == 1 and ydif == 1:
+            game.opendoor(self.uuid, locked=True)
+
 
 exported_class = LockedDoor

@@ -70,8 +70,6 @@ class GameplayScene(Scene):
         self.droppedkeys = {}
         self.droppedscrap = {}
         self.masterdoor = False
-        self.keys = 0
-
 
     def init_prism_palettes(self):
         self.darkprism = []
@@ -96,6 +94,7 @@ class GameplayScene(Scene):
         self.ground = entities.get('ground')
         self.map = None
         self.lastlevel = 'start'
+        self.player =None
         sx, sy = self.load(self.first_level)
         print self.droppedscrap
         self.player = entities.get('player')(sx, sy)
@@ -107,6 +106,7 @@ class GameplayScene(Scene):
         self.frame = None
         self.lastmouse = None
         self.dirty = True
+
 
         self.bg = Console(self.view.width, self.view.height)
         for x in xrange(self.view.width):
@@ -137,6 +137,12 @@ class GameplayScene(Scene):
         if not reset:
             for guard in self.killedguards:
                 self.deadguards.add(guard)
+            self._player = copy(self.player)
+        else:
+            if 'MASTERTRIGGER' in self.seenmsgs:
+                self.seenmsgs.remove('MASTERTRIGGER')
+            self.droppedscrap[filename] = []
+            self.droppedkeys[filename] = []
         self.killedguards = set()
         try:
             fobj = open(os.path.join("data/levels", filename + '.lvl'), 'r')
@@ -166,6 +172,23 @@ class GameplayScene(Scene):
                         remove.append(ent)
                 for guard in remove:
                     self.level.entities.remove(guard)
+                # RESET MASTER ROOM
+                if self.levelname == 'masterroom' and self.player.masterkey:
+                    remove = []
+                    for ent in self.level.entities:
+                        if ent.type == 'guard':
+                            remove.append(ent)
+                            self.add(get('scrap')(ent.x, ent.y))
+                        elif ent.name in ['electricity', 'guardgenerator', 'masterkey']:
+                            remove.append(ent)
+                    for ent in remove:
+                        self.level.entities.remove(ent)
+                    remove = []
+                    for tile in self.level.tiles:
+                        if tile.type == 'electricity':
+                            remove.append(tile)
+                    for tile in remove:
+                        self.level.tiles.remove(tile)
                 self.level.entities += self.droppedkeys[self.levelname] + self.droppedscrap[self.levelname]
                 self.map.compute_fov(sx, sy)
                 return sx, sy
@@ -199,31 +222,27 @@ class GameplayScene(Scene):
 
     def resetdoors(self):
         for ent in self.level.entities:
-            if ent.name == 'door':
+            if ent.type == 'door':
                 ent.icon = "+"
                 ent.block = True
                 ent.transparent = False
                 self.map.set_properties(ent.x, ent.y, walkable = False, transparent=False)                    
 
     def opendoor(self, uuid, locked=False):
-        if locked:
-            removed = []
-            for entity in self.level.entities:
-                if entity.name == 'lockeddoor' and entity.uuid == uuid:
-                    removed.append(entity)
-            for ent in removed:
-                self.level.entities.remove(ent)
-            if uuid not in self.opendoors:
+        if locked and uuid not in self.opendoors:
+            if self.player.keys == 0:
+                return
+            else:
+                self.player.keys -= 1
                 self.opendoors.add(uuid)
-                return True
-        else:
-            for ent in self.level.entities:
-                if ent.name == 'door' and ent.uuid == uuid:
-                    ent.icon = " "
-                    ent.block = False
-                    ent.transparent = True
-                    self.map.set_properties(ent.x, ent.y, walkable = True, transparent=True)
-                    self.map.compute_fov(self.player.x, self.player.y)
+
+        for ent in self.level.entities:
+            if  ent.type == 'door' and ent.uuid == uuid:
+                ent.icon = " "
+                ent.block = False
+                ent.transparent = True
+                self.map.set_properties(ent.x, ent.y, walkable = True, transparent=True)
+                self.map.compute_fov(self.player.x, self.player.y)
 
 
     def show_story(self):
@@ -259,6 +278,7 @@ class GameplayScene(Scene):
         self.set_frame(48, 30, story, "And the story goes...", False)
         self.dirty = True
        
+
         
     def show_help(self):
         help = [
@@ -272,7 +292,7 @@ class GameplayScene(Scene):
             "",
             "            You have {0} scrap.".format(self.player.scrap),
             "",
-            "            You have {0} keys.".format(self.keys),
+            "            You have {0} keys.".format(self.player.keys),
         ]
 
         self.set_frame(45, 13, help, "Prism Break Help", False)
@@ -419,7 +439,10 @@ class GameplayScene(Scene):
                 for y in xrange(view.height):
                     if self.map.cell(x, y).lit:
                         bg = random.choice(self.lightprism)
-                        bg = bg.lerped(YELLOW, .04)
+                        if self.casting:
+                            bg = bg.lerped(LIGHT_BLUE, .09)
+                        else:
+                            bg = bg.lerped(YELLOW, .04)
                         view.put_char(x, y, ord(self.ground.icon), self.ground.fg, bg)
             # Draw tiles
             for tile in  self.level.tiles:

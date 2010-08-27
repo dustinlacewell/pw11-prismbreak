@@ -15,9 +15,15 @@ class Level(object):
                 return t
 
     def ent_at(self, x, y):
+        nonbots = []
         for e in self.entities:
             if e.x == x and e.y == y:
-                return e
+                if e.type != 'guard':
+                    nonbots.append(e)
+                else:
+                    return e
+        if nonbots:
+            return nonbots[0]
 
     def draw(self):
         pass

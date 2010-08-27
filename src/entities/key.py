@@ -10,7 +10,7 @@ class Key(Entity):
 
     def touched(self, game, ent):
         if ent.name == 'player':
-            game.keys += 1
+            game.player.keys += 1
             game.remove(self)
 
 exported_class = Key

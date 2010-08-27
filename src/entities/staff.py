@@ -10,7 +10,7 @@ class Staff(Entity):
 
     def touched(self, game, ent):
         if ent.name == 'player':
-            player.staff = True
+            game.player.staff = True
             game.remove(self)
 
 exported_class = Staff

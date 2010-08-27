@@ -6,6 +6,7 @@ from src.entities import Entity
 
 class Door(Entity):
     name = 'door'
+    type = 'door'
     icon = "+"
     fg = GRAY
     bg = YELLOW

@@ -11,7 +11,7 @@ class MasterGuard(RobotGuard):
     icon = "M"
     fg = GREEN
     uuid = "MASTERGUARD"
-    hp = 5
+    hp = 1
 
     def __init__(self, x, y):
         super(MasterGuard, self).__init__(x, y, "MASTERGUARD")
@@ -40,15 +40,24 @@ class MasterGuard(RobotGuard):
         print "MASTER HEALTH", self.hp
         self.hp -= 1
         if self.hp == 0:
+            remove = []
             for ent in game.level.entities:
                 if ent.type == 'guard':
-                    game.remove(ent)
+                    remove.append(ent)
                     game.add(get('scrap')(ent.x, ent.y))
                 elif ent.name in ['electricity', 'guardgenerator']:
-                    game.level.entities.remove(ent)
+                    remove.append(ent)
+            for ent in remove:
+                game.level.entities.remove(ent)
+            remove = []
             for tile in game.level.tiles:
                 if tile.type == 'electricity':
-                    game.level.tiles.remove(tile)
+                    remove.append(tile)
+            for tile in remove:
+                game.level.tiles.remove(tile)
+            
+            game.remove(self)
+            game.set_frame(42, 5, "Defeating Screwloose has disabled the Master-Key security!", "Success!")
 
     def touched(self, game, ent):
         if ent.type == 'guard':

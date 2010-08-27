@@ -39,7 +39,7 @@ class Application(object):
         font_file = self.conf.get('render', 'font_file')
         font = Font(font_file, FONT_GREYSCALE | FONT_TCOD)
         dlog("{0},{1}, {2}".format(w, h, font_file))
-        self.window = Window(int(w), int(h), "Prison Break", font=font)
+        self.window = Window(int(w), int(h), "Prison Break", font=font, renderer=RENDER_SDL)
         self.window.keyrepeat = (100, 100)
         self.view = Console(int(w), int(h))
         self.input = InputMapper(self)

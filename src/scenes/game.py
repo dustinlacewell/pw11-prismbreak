@@ -70,6 +70,8 @@ class GameplayScene(Scene):
         self.droppedkeys = {}
         self.droppedscrap = {}
         self.masterdoor = False
+        self.storyshown = False
+        self.helpshown = False
 
     def init_prism_palettes(self):
         self.darkprism = []
@@ -278,24 +280,91 @@ class GameplayScene(Scene):
         self.set_frame(48, 30, story, "And the story goes...", False)
         self.dirty = True
        
+    def show_staff(self):
+        teleport = self.app.input.get_action_mapping('game', 'teleport')
+        block = self.app.input.get_action_mapping('game', 'block')
+        stun = self.app.input.get_action_mapping('game', 'stun')
+        help = self.app.input.get_action_mapping('game', 'help')
 
+        staff = [
+            "'Aha, here you are!'",
+            ""
+            "       You have recovered your staff.",
+            "   You can now cast the following spells",
+            "",
+            "   Teleport:                %s" % (teleport,),
+            "   Make block:              %s" % (block,),
+            "   Stun:                    %s" % (stun,),
+            "",
+            "Make sure you keep an eye on your scrap",
+            "by hitting the '%s' key." % (help,),
+            ]
+            
+        self.set_frame(40, len(staff)+3, staff, "Wizard says:", wrap=False)
         
     def show_help(self):
+        teleport = self.app.input.get_action_mapping('game', 'teleport')
+        block = self.app.input.get_action_mapping('game', 'block')
+        stun = self.app.input.get_action_mapping('game', 'stun')
+        quit = self.app.input.get_action_mapping('game', 'quit')
+        help = self.app.input.get_action_mapping('game', 'help')
+        wait = self.app.input.get_action_mapping('game', 'wait')
+        confirm = self.app.input.get_action_mapping('game', 'confirm')
+        u = self.app.input.get_action_mapping('game', 'move_up')
+        d = self.app.input.get_action_mapping('game', 'move_down')
+        l = self.app.input.get_action_mapping('game', 'move_left')
+        r = self.app.input.get_action_mapping('game', 'move_right')
+        ul = self.app.input.get_action_mapping('game', 'move_upleft')
+        dl = self.app.input.get_action_mapping('game', 'move_downleft')
+        ur = self.app.input.get_action_mapping('game', 'move_upright')
+        dr = self.app.input.get_action_mapping('game', 'move_downright')
+
         help = [
-            "How to play:",
+            "HOW TO PLAY:",
             " 1. Escape Prismguard.",
             " 2. Avoid the robots.",
             " 3. If two robots collide, they will drop",
             "    some scrap. You might need it later on.",
             " ",
-            "Check userinput.conf to check/change keys!",
+            "CONTROLS:",
+            "   Help:                    %s" % (help,),
+            "   Quit:                    %s" % (quit,),
+            "   Close msgbox:            %s" % (confirm),
+            "   Wait:                    %s" % (wait,),
+            "   Up/Down                  %s/%s" % (u,d),
+            "   Left/Right:              %s/%s" % (l,r),
+            "   Up-Left/Up-Right:        %s/%s" % (ul, ur),
+            "   Dn-Left/Dn-Right:        %s/%s" % (dl, dr),
             "",
-            "            You have {0} scrap.".format(self.player.scrap),
+            ]
+
+        spells = [
+            "SPELLS:",
+            "   Teleport:        %s" % (teleport,),
+            "   Make block:      %s" % (block,),
+            "   Stun:            %s" % (stun,),
             "",
-            "            You have {0} keys.".format(self.player.keys),
+            ]
+
+        help2 = [
+            "     * edit userinput.conf to change",
+            "",
+            "INVENTORY",
+            "            You have %s scrap." % (self.player.scrap,),
+            "",
         ]
 
-        self.set_frame(45, 13, help, "Prism Break Help", False)
+
+        if self.player.staff:
+            help += spells
+        if self.opendoors:
+            help2.append("            You have %s keys." % (self.player.keys,))
+            help2.append("")
+        if self.player.masterkey:
+            help2.append("         You have the Master-Key." % (self.player.keys,))
+
+        help += help2
+        self.set_frame(45, len(help) + 3, help, "Prism Break Help", False)
         self.dirty = True
 
     def check_teleport(self, cell):
@@ -336,6 +405,9 @@ class GameplayScene(Scene):
         return True
 
     def update(self):
+        if self.storyshown and not self.helpshown:
+            self.helpshown = True
+            self.show_help()
 	self.mouse = self.app.window.mouseinfo
         action = self.app.input.check_for_action('game')
         oldx, oldy = self.player.x, self.player.y
@@ -372,6 +444,8 @@ class GameplayScene(Scene):
                 elif action == 'move_up':
                     self.frame.scroll_up()
                 elif action in ['quit', 'help', 'confirm']:
+                    if not self.storyshown:
+                        self.storyshown = True
                     self.frame = None
                     if self.playerdead:
                         self.reset()

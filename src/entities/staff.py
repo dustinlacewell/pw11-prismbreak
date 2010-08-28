@@ -12,5 +12,6 @@ class Staff(Entity):
         if ent.name == 'player':
             game.player.staff = True
             game.remove(self)
+            game.show_staff()
 
 exported_class = Staff

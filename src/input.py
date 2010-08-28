@@ -27,6 +27,7 @@ class InputMapper(object):
         'K_SPACE', 'K_CHAR',
     ]
 
+
     valid_chars = string.printable[:-5]
 
     def __init__(self, app):
@@ -35,7 +36,27 @@ class InputMapper(object):
         self.parser = RawConfigParser()
         self.parser.optionxform = str
         self.load_mapping()
+        self.keyvals = self.get_keyvals()
 
+    def get_keyvals(self):
+        keyvals = {}
+        for keyname in self.keylist:
+            if hasattr(pytcod, keyname):
+                val = getattr(pytcod, keyname)
+                keyvals[val] = keyname
+        print keyvals
+        return keyvals
+
+    def get_action_mapping(self, section, action):
+        print "ACTIONMAP", section, action
+        for keyname in  self.parser.options(section):
+            _action = self.parser.get(section, keyname)
+            if _action == action:
+                if keyname.startswith('K_'):
+                    keyname = keyname[2:]
+                return keyname
+
+            
     def load_mapping(self, filename='userinput.conf'):
         fobj = open('data/input.conf', 'r')
         self.parser.readfp(fobj)
@@ -55,7 +76,7 @@ class InputMapper(object):
         if not valid:
             raise Exception("Input configuration contains invalid keys.")
         self.section = self.parser.sections()[0]
-    
+
     def check_for_action(self, section):
         key = self.app.window.check_for_key(pytcod.PRESSED)
         self.lastkey = key

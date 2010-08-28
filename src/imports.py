@@ -85,7 +85,7 @@ def get( module, submodule ):
     full_path = '.'.join( ['src', module, submodule, 'exported_class'] )
     try:
         cls, mod = _get_class(full_path)
-        dlog("Dynamically loaded %s from %s" % (cls, mod.__file__))
+        #dlog("Dynamically loaded %s from %s" % (cls, mod.__file__))
         _loaded_module_objects[ submodule ] = mod
         return cls
     except Exception, e:

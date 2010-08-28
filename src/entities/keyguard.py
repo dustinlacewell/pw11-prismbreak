@@ -22,7 +22,6 @@ class KeyGuard(RobotGuard):
         super(KeyGuard, self).do_move(game, dx, dy)
 
     def touched(self, game, ent):
-        print "KEYGUARD TOUCHED"
         if ent.type == 'guard':
             game.remove(ent)
             game.remove(self)

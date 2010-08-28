@@ -44,11 +44,9 @@ class InputMapper(object):
             if hasattr(pytcod, keyname):
                 val = getattr(pytcod, keyname)
                 keyvals[val] = keyname
-        print keyvals
         return keyvals
 
     def get_action_mapping(self, section, action):
-        print "ACTIONMAP", section, action
         for keyname in  self.parser.options(section):
             _action = self.parser.get(section, keyname)
             if _action == action:
@@ -67,7 +65,6 @@ class InputMapper(object):
 	    self.parser.write(open("userinput.conf", 'w'))
         valid = True # validate
         for section in self.parser.sections():
-            print self.parser.options(section)
             items = self.parser.items(section)
             for key, action in items:
                 if not hasattr(pytcod, key) and key not in self.valid_chars:

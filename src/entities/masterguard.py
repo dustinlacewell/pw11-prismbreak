@@ -37,7 +37,6 @@ class MasterGuard(RobotGuard):
                 self.y = dy
 
     def checkfinish(self, game):
-        print "MASTER HEALTH", self.hp
         self.hp -= 1
         if self.hp == 0:
             remove = []

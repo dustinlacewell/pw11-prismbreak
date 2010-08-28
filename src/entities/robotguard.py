@@ -55,7 +55,6 @@ class RobotGuard(Entity):
     def update(self, game):
         p = game.player
         if (p.x, p.y) == (self.x, self.y):
-            print "Player teleported on me"
             self.do_move(game, self.x, self.y)
             return
         if self.path:

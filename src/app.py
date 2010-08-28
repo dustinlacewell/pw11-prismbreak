@@ -38,7 +38,6 @@ class Application(object):
         w, h = self.conf.get('core', 'window_width', 'window_height')
         font_file = self.conf.get('render', 'font_file')
         font = Font(font_file, FONT_GREYSCALE | FONT_TCOD)
-        dlog("{0},{1}, {2}".format(w, h, font_file))
         self.window = Window(int(w), int(h), "Prison Break", font=font, renderer=RENDER_SDL)
         self.window.keyrepeat = (100, 100)
         self.view = Console(int(w), int(h))
@@ -67,7 +66,7 @@ class Application(object):
             self.window.clear()
             self.scene.draw(self.view, False)
             self.window.blit(self.view)
-            self.window.write("{0}/fps".format(self.window.fps))
+            #self.window.write("{0}/fps".format(self.window.fps))
             self.window.flush()
 
             self.scene.update()

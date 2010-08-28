@@ -20,7 +20,6 @@ class MessageFrame(object):
             self.message = wrap(message, width - 2, drop_whitespace = False)
         else:
             self.message = message
-        print self.message
         self.nblines = len(self.message)
         self.line = 0
         if self.nblines <= height - 2:
@@ -98,7 +97,6 @@ class GameplayScene(Scene):
         self.lastlevel = 'start'
         self.player =None
         sx, sy = self.load(self.first_level)
-        print self.droppedscrap
         self.player = entities.get('player')(sx, sy)
         self._player = copy(self.player)
         self.playerdead = False
@@ -155,7 +153,6 @@ class GameplayScene(Scene):
             if self.levelname not in self.droppedscrap:
                 self.droppedscrap[self.levelname] = []
             
-            print "LOAD,", filename, "LASTLEVEL", self.lastlevel
             if self.lastlevel in self.level.links:
                 sx, sy = self.level.links[self.lastlevel]
                 self.map = Map(self.app.view.width, self.app.view.height)
@@ -201,7 +198,6 @@ class GameplayScene(Scene):
 
     def reset(self):
         p = self._player
-        print 'self.levelname', self.levelname
         ppos = self.load(self.levelname, reset=True)
         if ppos:
             p.x, p.y = ppos
@@ -219,7 +215,10 @@ class GameplayScene(Scene):
 
     def set_frame(self, width, height, message, title, wrapped=True):
         x = self.view.width / 2
-        y = self.view.height / 2
+        if self.player.y < self.view.height / 2:
+            y = self.view.height / 2 + 5
+        else:
+            y = 15
         self.frame = MessageFrame(x, y, width, height, message, title, wrapped)        
 
     def resetdoors(self):
@@ -561,5 +560,10 @@ class GameplayScene(Scene):
                 bg = self.view.get_back(x, y)
                 bg = bg.lerped(RED, .3)
                 self.view.set_back(x, y, bg)
+            if self.casting:
+                mframe = MessageFrame(self.view.width / 2, 2, len(self.casting)+ 2, 3, self.casting.capitalize(), "Casting:")
+                self.view.blit(mframe.view, mframe.x, mframe.y)
+        mframe = MessageFrame(self.view.width - 5, 2, len("Scrap:") + 2, 3, str(self.player.scrap), "Scrap:")
+        self.view.blit(mframe.view, mframe.x, mframe.y)
         self.dirty = False
 exported_class = GameplayScene

@@ -23,7 +23,6 @@ class MasterTrigger(Entity):
                 game.set_frame(50, 5, self.message, self.title, wrapped=True)
                 game.seenmsgs.add(self.uuid)
                 g = MasterGuard( 40, 40)
-                print "GUARD CREATED"
                 game.add(g)
                 remove = []
                 uuid = 'MASTERDOOR1'

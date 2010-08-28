@@ -9,12 +9,16 @@ class MasterGuard(RobotGuard):
     name = 'masterguard'
     type = 'guard'
     icon = "M"
-    fg = GREEN
     uuid = "MASTERGUARD"
+    colors = Color.gradient({0:RED, 5:GREEN})
     hp = 5
 
     def __init__(self, x, y):
         super(MasterGuard, self).__init__(x, y, "MASTERGUARD")
+
+    def _getfg(self):
+        return self.colors[self.hp]
+    fg = property(_getfg)
 
     def do_move(self, game, dx, dy):
         if self.coord_in_bounds(game, dx, dy):

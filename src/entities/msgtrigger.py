@@ -23,7 +23,7 @@ class MsgTrigger(Entity):
     def touched(self, game, ent):
         if ent.name == "player":
             if self.uuid not in game.seenmsgs:
-                game.set_frame(34, 5, self.message, self.title, wrapped=True)
+                game.set_frame(34, len(self.message) / 34 + 5, self.message, self.title, wrapped=True)
                 game.seenmsgs.add(self.uuid)
 
 exported_class = MsgTrigger

@@ -43,8 +43,10 @@ class MessageFrame(object):
         self.view.print_frame(0, 0, self.width, self.height, self.title, empty=False)
         if self.line < self.maxline:
             self.view.set_char(self.width - 1, self.height - 1, CHAR_ARROW_S)
+            self.view.set_fore(self.width - 1, self.height - 1, RED)
         if self.line > 0:
             self.view.set_char(self.width - 1, 0, CHAR_ARROW_N)
+            self.view.set_fore(self.width - 1, 0, RED)
 
     def scroll_down(self):
         if self.line < self.maxline:

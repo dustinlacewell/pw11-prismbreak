@@ -1,1 +1,1 @@
-export DYLD_LIBRARY_PATH=:lib/osx/;python run_game.py 
+export DYLD_LIBRARY_PATH=:lib/osx/ DYLD_FRAMEWORK_PATH=:lib/osx/Frameworks;python run_game.py 

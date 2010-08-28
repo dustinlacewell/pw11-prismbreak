@@ -311,7 +311,7 @@ class GameplayScene(Scene):
 
         if self.player.staff:
             help += spells
-        if self.opendoors:
+        if self.player.keys:
             help2.append("            You have %s keys." % (self.player.keys,))
             help2.append("")
         if self.player.masterkey:
@@ -519,6 +519,8 @@ class GameplayScene(Scene):
                 mframe = MessageFrame(self.view.width / 2, 2, len(self.casting)+ 2, 3, self.casting.capitalize(), "Casting:")
                 self.view.blit(mframe.view, mframe.x, mframe.y)
         mframe = MessageFrame(self.view.width - 5, 2, len("Scrap:") + 2, 3, str(self.player.scrap), "Scrap:")
+        self.view.blit(mframe.view, mframe.x, mframe.y)
+        mframe = MessageFrame(self.view.width - 5, 6, len("Keys:") + 3, 3, str(self.player.keys), "Keys:")
         self.view.blit(mframe.view, mframe.x, mframe.y)
         self.dirty = False
 exported_class = GameplayScene

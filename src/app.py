@@ -38,7 +38,7 @@ class Application(object):
         w, h = self.conf.get('core', 'window_width', 'window_height')
         font_file = self.conf.get('render', 'font_file')
         font = Font(font_file, FONT_GREYSCALE | FONT_TCOD)
-        self.window = Window(int(w), int(h), "Prison Break", font=font, renderer=RENDER_SDL)
+        self.window = Window(int(w), int(h), "Prism Break, Pyweek 11: 'Caught' ", font=font, renderer=RENDER_SDL)
         self.window.keyrepeat = (100, 100)
         self.view = Console(int(w), int(h))
         self.input = InputMapper(self)

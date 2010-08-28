@@ -29,7 +29,7 @@ class CreditsScene(Scene):
             "",
             "          Special thanks goes to,",
             "",
-            "            ajhager & _habnabit,",
+            "        ajhager, _habnabit & cortesi",
             "",
             "for their help getting the game packaged.",
             "",

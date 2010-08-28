@@ -1,3 +1,5 @@
+from textwrap import wrap
+
 from pytcod import *
 
 class MessageFrame(object):

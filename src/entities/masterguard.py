@@ -11,7 +11,7 @@ class MasterGuard(RobotGuard):
     icon = "M"
     fg = GREEN
     uuid = "MASTERGUARD"
-    hp = 1
+    hp = 5
 
     def __init__(self, x, y):
         super(MasterGuard, self).__init__(x, y, "MASTERGUARD")

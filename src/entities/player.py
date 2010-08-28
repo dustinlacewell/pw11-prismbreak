@@ -11,10 +11,10 @@ class Player(Entity):
     icon = "W"
     fg = Color(100, 63, 161)
     bg = Color(31, 33, 37)
-    staff = True
+    staff = False
     masterkey = False
     scrap = 0
-    keys = 2
+    keys = 0
 
     guard_messages = [
         "Ack, stupid bots!",
@@ -38,6 +38,9 @@ class Player(Entity):
     def touched(self, game, ent):
         if ent.type == 'guard':
             game.player_death(ent)
+        if ent.name == 'masterguard' and not self.staff:
+            game.set_frame(40, 3, "I don't think I can beat him without magic. He's just to darned fast.", "Wizard grumbles:")
+
 
     def random_deathmsg(self, game, ent):
         name = "%s_messages" % ent.type

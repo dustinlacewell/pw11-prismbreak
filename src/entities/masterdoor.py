@@ -14,6 +14,9 @@ class MasterDoor(Entity):
     transparent = False
     uuid = 'masterdoor'
 
+    def __init__(self, x, y, uuid):
+        super(MasterDoor, self).__init__(x, y)
+
     def update(self, game):
         p = game.player
         xdif = abs(p.x - self.x)

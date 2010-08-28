@@ -26,6 +26,7 @@ class GameplayScene(Scene):
         self.masterdoor = False
         self.storyshown = False
         self.helpshown = False
+        self.quitshown = False
 
     def init_prism_palettes(self):
         self.darkprism = []
@@ -363,9 +364,16 @@ class GameplayScene(Scene):
             self.helpshown = True
             self.show_help()
 	self.mouse = self.app.window.mouseinfo
-        action = self.app.input.check_for_action('game')
         oldx, oldy = self.player.x, self.player.y
-
+        if self.quitshown:
+            key = self.app.window.check_for_key(PRESSED)
+            if key.char == ord('y'):
+                self.app.running = False
+            elif key.char == ord('n'):
+                self.quitshown = False
+                self.dirty = True
+            return
+        action = self.app.input.check_for_action('game')
         if self.casting:
             cx, cy = self.mouse.cx, self.mouse.cy
             if (cx, cy) != self.lastmouse:
@@ -387,7 +395,7 @@ class GameplayScene(Scene):
                         self.castline = None
                         self.map.compute_fov(self.player.x, self.player.y)
                         self.dirty = True
-            if action == "quit":
+            if action in ["quit", "confirm"]:
                 self.casting = None
                 self.castline = None
                 self.dirty = True
@@ -397,7 +405,7 @@ class GameplayScene(Scene):
                     self.frame.scroll_down()
                 elif action == 'move_up':
                     self.frame.scroll_up()
-                elif action in ['quit', 'help', 'confirm']:
+                elif action in ['wait', 'confirm']:
                     if not self.storyshown:
                         self.storyshown = True
                     self.frame = None
@@ -406,7 +414,7 @@ class GameplayScene(Scene):
                 self.dirty = True
                 return
 	    if action == 'quit':
-		self.app.running = False
+		self.quitshown = True
                 return
             elif action == 'load':
                 s = raw_input("Level name:")
@@ -523,4 +531,11 @@ class GameplayScene(Scene):
         mframe = MessageFrame(self.view.width - 5, 6, len("Keys:") + 3, 3, str(self.player.keys), "Keys:")
         self.view.blit(mframe.view, mframe.x, mframe.y)
         self.dirty = False
+        if self.quitshown:
+            mframe = MessageFrame(self.view.width / 2, 
+                                  self.view.height / 2,
+                                  20, 3, 
+                                  "  (y)es or (n)o", "Really quit?")
+            self.view.blit(mframe.view, mframe.x, mframe.y)
+
 exported_class = GameplayScene

@@ -1,0 +1,1 @@
+export LD_LIBRARY_PATH=:lib/lin64/;python run_game.py 
